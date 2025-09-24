@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cardholder App</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background-color: #f7f7f7;
+    }
+    h2 {
+      color: #333;
+    }
+    form {
+      background: #fff;
+      padding: 15px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 4px rgba(0,0,0,0.1);
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+    }
+    input {
+      width: 100%;
+      padding: 8px;
+      margin-top: 4px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    button {
+      margin-top: 10px;
+      padding: 10px 15px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      background: #fff;
+      box-shadow: 0 0 4px rgba(0,0,0,0.1);
+    }
+    th, td {
+      border: 1px solid #ddd;
+      text-align: left;
+      padding: 8px;
+    }
+    th {
+      background-color: #f2f2f2;
+    }
+    #message {
+      margin-top: 10px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Cardholder Information App</h1>
+
+  <!-- Add Card Form -->
+  <h2>Add Card</h2>
+  <form id="addCardForm">
+    <label for="cardholderName">Cardholder Name:</label>
+    <input type="text" id="cardholderName" name="cardholderName" required>
+
+    <label for="pan">Card Number (PAN):</label>
+    <input type="text" id="pan" name="pan" required>
+
+    <button type="submit">Add Card</button>
+    <div id="addMessage"></div>
+  </form>
+
+  <!-- Search Cards Form -->
+  <h2>Search Cards</h2>
+  <form id="searchForm">
+    <label for="last4">Last 4 Digits:</label>
+    <input type="text" id="last4" name="last4" maxlength="4" required>
+    <button type="submit">Search</button>
+  </form>
+
+  <!-- Results Table -->
+  <table>
+    <thead>
+      <tr>
+        <th>Cardholder Name</th>
+        <th>Masked PAN</th>
+        <th>Created Time</th>
+      </tr>
+    </thead>
+    <tbody id="results"></tbody>
+  </table>
+
+  <script>
+    // Handle Add Card
+    document.getElementById('addCardForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const name = document.getElementById('cardholderName').value;
+      const pan = document.getElementById('pan').value;
+
+      const res = await fetch('/cards', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cardholderName: name, pan: pan })
+      });
+
+      if (res.ok) {
+        document.getElementById('addMessage').textContent = 'Card added successfully!';
+        this.reset();
+      } else {
+        document.getElementById('addMessage').textContent = 'Error adding card';
+      }
+    });
+
+    // Handle Search Cards
+    document.getElementById('searchForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const last4 = document.getElementById('last4').value;
+      const res = await fetch('/cards?last4=' + last4);
+      if (res.ok) {
+        const cards = await res.json();
+        const tbody = document.getElementById('results');
+        tbody.innerHTML = '';
+        cards.forEach(c => {
+          tbody.innerHTML += `
+            <tr>
+              <td>${c.cardholderName}</td>
+              <td>${c.maskedPan}</td>
+              <td>${c.createdTime}</td>
+            </tr>
+          `;
+        });
+      } else {
+        alert('Error fetching cards');
+      }
+    });
+  </script>
+
+</body>
+</html>
